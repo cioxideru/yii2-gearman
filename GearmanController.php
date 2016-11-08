@@ -10,48 +10,54 @@ use micmorozov\yii2\gearman\MasterApplication;
 
 class GearmanController extends Controller
 {
-    /**
-     * @var boolean whether to run the forked process.
-     */
-    protected $fork = true;
+	/**
+	 * @var boolean whether to run the forked process.
+	 */
+	protected $fork = true;
 
-    public $gearmanComponent = 'gearman';
+	public $gearmanComponent = 'gearman';
 
-    protected function getMaster(){
-    	return new MasterApplication($this->gearmanComponent, $this->fork);
-    }
+	protected function getMaster(){
+		return new MasterApplication($this->gearmanComponent, $this->fork);
+	}
 
-    public function actionStart()
-    {
-    	$master = $this->getMaster();
-    	$master->start();
-    }
+	public function actionStart()
+	{
+		$master = $this->getMaster();
+		$master->start();
+	}
 
-    public function actionStop()
-    {
-    	$master = $this->getMaster();
-    	$master->stop();
-    }
+	public function actionAttach()
+	{
+		$master = $this->getMaster();
+		$master->attach();
+	}
 
-    public function actionRestart()
-    {
-    	$master = $this->getMaster();
-    	$master->restart();
-    }
+	public function actionStop()
+	{
+		$master = $this->getMaster();
+		$master->stop();
+	}
 
-    public function options($id)
-    {
-        $options = [];
-        if (in_array($id, ['start', 'restart'])) {
-            $options = ['fork'];
-        }
+	public function actionRestart()
+	{
+		$master = $this->getMaster();
+		$master->restart();
+	}
 
-        return array_merge(parent::options($id), $options);
-    }
+	public function options($id)
+	{
+		$options = [];
+		if (in_array($id, ['start', 'restart'])) {
+			$options = ['fork'];
+		}
 
-    protected function getApplication()
-    {
-        $component = Yii::$app->get($this->gearmanComponent);
-        return $component->getApplication();
-    }
+		return array_merge(parent::options($id), $options);
+	}
+
+	protected function getApplication()
+	{
+		$component = Yii::$app->get($this->gearmanComponent);
+		return $component->getApplication();
+	}
 }

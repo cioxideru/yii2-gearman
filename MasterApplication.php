@@ -27,43 +27,46 @@ class MasterApplication
         $this->gearmanComponent = $gearmanComponent;
         $this->fork = $fork;
     }
-    
-    public function start(){
-    	//после команды "старт" создадим дочерний поток,
-    	//который будет следить за воркерами
-    	
-    	$this->stop();
-    	
-    	$pid = pcntl_fork();
-    	
-    	$observeMaster = (bool)$pid == 0;
-    	
-    	if($observeMaster){
-    		//этот процесс будет следить за дочерними
-    		$this->getProcess()->setPid(getmypid());
-    		
-    		//создаем дочернии процессы-воркеры
-    		$apps = $this->getApplication();
-    		foreach ($apps as $app) {
-    			$parent = $this->startApp($app);
-    			
-    			//чтобы дочерние больше не порождали процессы
-    			if( !$parent )
-    				return ;
-    		}
-    		
-    		if( $parent ){
-    			//вешаем сигналы на мастера
-    			$this->signalHandle();
-    			
-    			$this->observe();
-    		}
-    	}
-    	else{
-    		//родитель ничего не делает
-    		return true;
-    	}
-    }
+
+	public function attach(){
+		$pid = pcntl_fork();
+
+		$observeMaster = (bool)$pid == 0;
+
+		if($observeMaster){
+			//этот процесс будет следить за дочерними
+			$this->getProcess()->setPid(getmypid());
+
+			//создаем дочернии процессы-воркеры
+			$apps = $this->getApplication();
+			foreach ($apps as $app) {
+				$parent = $this->startApp($app);
+
+				//чтобы дочерние больше не порождали процессы
+				if( !$parent )
+					return ;
+			}
+
+			if( $parent ){
+				//вешаем сигналы на мастера
+				$this->signalHandle();
+
+				$this->observe();
+			}
+		}
+		else{
+			//родитель ничего не делает
+			return true;
+		}
+	}
+
+	public function start(){
+		//после команды "старт" создадим дочерний поток,
+		//который будет следить за воркерами
+
+		$this->stop();
+		$this->attach();
+	}
     
     protected function startApp($app){
     	return $this->runApplication($app);
